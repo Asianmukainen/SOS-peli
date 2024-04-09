@@ -10,3 +10,6 @@ Ohjelma pitää kirjaa SOS:ien määrästä pisteiden muodossa, ja ilmoittaa lop
 
 -- HUOMIOITAVAA --
 SOS yhdistelmien värimerkintä ei toimi sääntöjen mukaisesti, eikä pisteidenlasku enää toimi oikein ensimmäisen SOS:in jälkeen, vaan piste voi tulla vaikka uutta SOS:ia ei ole tehty.
+
+-- TEKIJÄN KOMMENTTEJA --
+SOS yhdistelmien värimerkintä  SOS yhdistelmien tunnistaminen olivat vaikeita tehdä. Tiedonkeruu käyttäjältä ja muut yksinkertaiset asiat oli helppoja.
