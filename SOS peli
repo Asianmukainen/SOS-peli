@@ -1,0 +1,516 @@
+#include <windows.h>
+#include <iostream>
+#include <set>
+#include <string>
+#include <vector>
+
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+#define DISABLE_NEWLINE_AUTO_RETURN 0x0008
+
+using namespace std;
+
+int x, y;
+int ruudukonKoko;
+int kirjainMaara = 0;
+char kirjain;
+
+class Pelaaja {
+   public:
+    // Konstruktori
+    Pelaaja(const string& k_nimi, char k_kirjain_S, char k_kirjain_O)
+        : nimi(k_nimi),
+          kirjain_S(k_kirjain_S),
+          kirjain_O(k_kirjain_O),
+          pisteet1(0),
+          pisteet2(0) {}
+
+    // Getteri pelaajille
+    string getNimi() const { return nimi; }
+
+    // Getteri kirjain S:lle
+    char getKirjain_S() const { return kirjain_S; }
+
+    // Getteri kirjain O:lle
+    char getKirjain_O() const { return kirjain_O; }
+
+    // Lisää piste pelaajalle 1
+    void lisaaPiste1() { pisteet1++; }
+
+    // Lisää piste pelaajalle 2
+    void lisaaPiste2() { pisteet2++; }
+
+    // Getteri pelaajan 1 pisteille
+    int getPisteet1() const { return pisteet1; }
+
+    // Getteri pelaajan 2 pisteille
+    int getPisteet2() const { return pisteet2; }
+
+   private:
+    string nimi;
+    char kirjain_S;
+    char kirjain_O;
+    int pisteet1;
+    int pisteet2;
+};
+
+// Tehdään pelaajat
+Pelaaja pelaaja1("Pelaaja 1", 'S', 'O');
+Pelaaja pelaaja2("Pelaaja 2", 'S', 'O');
+// Laitetaan pelaaja 1 aloittajaksi
+Pelaaja* current = &pelaaja1;
+
+class Ruudukko {
+   public:
+    // Konstruktori
+    Ruudukko(int size) : koko(size) {
+        piste.resize(size);
+        for (int i = 0; i < size; ++i) {
+            piste[i].resize(size, '+');
+        }
+    }
+
+    // Getteri ruudukon koolle
+    int getKoko() const { return koko; }
+
+    // Getteri kirjaimen pisteelle
+    char getPiste(int y, int x) const { return piste[y][x]; }
+
+    // Setteri kirjaimen pisteelle
+    void setPiste(int y, int x, char value) { piste[y][x] = value; }
+
+    void tulostaRuudukko(const set<pair<int, int>>& SOSjono1,
+                         set<pair<int, int>>& SOSjono2,
+                         set<pair<int, int>>& SOSjono3,
+                         set<pair<int, int>>& SOSjono4) const {
+        // Katotaan onko uutta SOS:ia olemassa
+        bool uusiSOS = false;
+        // Huomioidaan että  x--; ja y--; ei vaikuta tähän
+        if (!SOSjono1.empty()) {
+            if (SOSjono1.find({x, y}) == SOSjono1.end() &&
+                SOSjono1.find({x + 1, y}) == SOSjono1.end() &&
+                SOSjono1.find({x + 2, y}) == SOSjono1.end()) {
+                uusiSOS = true;
+            }
+        }
+        // ||
+        if (!SOSjono2.empty()) {
+            if (SOSjono2.find({x, y}) != SOSjono2.end() &&
+                SOSjono2.find({x, y + 1}) != SOSjono2.end() &&
+                SOSjono2.find({x, y + 2}) != SOSjono2.end()) {
+                uusiSOS = true;
+            }
+        }
+        if (!SOSjono3.empty()) {
+            if (SOSjono3.find({x, y}) != SOSjono3.end() &&
+                SOSjono3.find({x + 1, y + 1}) != SOSjono3.end() &&
+                SOSjono3.find({x + 2, y + 2}) != SOSjono3.end()) {
+                uusiSOS = true;
+            }
+        }
+        if (!SOSjono4.empty()) {
+            if (SOSjono4.find({x, y}) != SOSjono4.end() &&
+                SOSjono4.find({x - 1, y}) != SOSjono4.end() &&
+                SOSjono4.find({x - 2, y}) != SOSjono4.end()) {
+                uusiSOS = true;
+            }
+        }
+
+        set<pair<int, int>> printedSOS;
+
+        // Tallenna toisen SOS:in kanssa risteävä kirjain
+        vector<pair<int, int>> joOlemassaOlevaKirjain;
+
+        // Tulostetaan ruudukko
+        for (int y = koko - 1; y >= 0; --y) {
+            cout << y + 1 << " ";
+            for (int x = 0; x < koko; ++x) {
+                bool jaettuKirjain = false;
+                bool SOStulostettu = false;
+
+                for (const auto& rivi : SOSjono1) {
+                    if ((rivi.first == x + 1 && rivi.second == y + 1) &&
+                        (rivi.first == x + 1 && rivi.second == y + 1) &&
+                        (rivi.first == x + 1 && rivi.second == y + 1)) {
+                        // for (const auto& riviPiste : joOlemassaOlevaKirjain)
+                        // {
+
+                        // if (riviPiste.first == rivi.first && riviPiste.second
+                        // == rivi.second) {
+
+                        if (SOSjono1.find({x + 1, y + 1}) == SOSjono1.end() &&
+                            SOSjono1.find({x + 2, y + 1}) == SOSjono1.end() &&
+                            SOSjono1.find({x + 3, y + 1}) == SOSjono1.end()) {
+                            joOlemassaOlevaKirjain.push_back({x + 1, y + 1});
+                            joOlemassaOlevaKirjain.push_back({x + 1, y + 1});
+                            joOlemassaOlevaKirjain.push_back({x + 1, y + 1});
+                            jaettuKirjain = true;
+
+                            break;  // Ei tulosteta uudestaan kirjainta joka
+                                    // risteää vanhan kanssa
+                        }
+                        //}
+
+                        if (current == &pelaaja1 && uusiSOS) {
+                            cout << "\033[31m" << piste[y][x] << " \033[0m";
+                        }
+                        if (current == &pelaaja2 && uusiSOS) {
+                            cout << "\033[34m" << piste[y][x] << " \033[0m";
+                        }
+                        SOStulostettu = true;
+                    }
+                }
+
+                for (const auto& sarake : SOSjono2) {
+                    if ((sarake.first == x + 1 && sarake.second == y + 1) &&
+                        (sarake.first == x + 1 && sarake.second == y + 1) &&
+                        (sarake.first == x + 1 && sarake.second == y + 1)) {
+                        // for (const auto& sarakePiste :joOlemassaOlevaKirjain)
+                        // {
+
+                        // if (sarakePiste.first == sarake.first &&
+                        // sarakePiste.second == sarake.second ) {
+
+                        if (SOSjono2.find({x + 1, y + 1}) != SOSjono2.end() &&
+                            SOSjono2.find({x + 1, y + 2}) != SOSjono2.end() &&
+                            SOSjono2.find({x + 1, y + 3}) != SOSjono2.end()) {
+                            joOlemassaOlevaKirjain.push_back({x + 1, y + 1});
+                            joOlemassaOlevaKirjain.push_back({x + 1, y + 1});
+                            joOlemassaOlevaKirjain.push_back({x + 1, y + 1});
+                            jaettuKirjain = true;
+
+                            break;
+                        }
+                        //}
+
+                        if (current == &pelaaja1 && uusiSOS) {
+                            cout << "\033[31m" << piste[y][x] << " \033[0m";
+                        }
+                        if (current == &pelaaja2 && uusiSOS) {
+                            cout << "\033[34m" << piste[y][x] << " \033[0m";
+                        }
+                        SOStulostettu = true;
+                    }
+                }
+                for (const auto& diagonaaliTaka : SOSjono3) {
+                    if ((diagonaaliTaka.first == x + 1 &&
+                         diagonaaliTaka.second == y + 1) &&
+                        (diagonaaliTaka.first == x + 1 &&
+                         diagonaaliTaka.second == y + 1) &&
+                        (diagonaaliTaka.first == x + 1 &&
+                         diagonaaliTaka.second == y + 1)) {
+                        // for (const auto& diagonaaliPiste
+                        // :joOlemassaOlevaKirjain) {
+
+                        // if (diagonaaliPiste.first == diagonaaliTaka.first &&
+                        // diagonaaliPiste.second == diagonaaliTaka.second) {
+                        if (SOSjono3.find({x + 1, y + 1}) != SOSjono3.end() &&
+                            SOSjono3.find({x + 2, y + 2}) != SOSjono3.end() &&
+                            SOSjono3.find({x + 3, y + 3}) != SOSjono3.end()) {
+                            joOlemassaOlevaKirjain.push_back({x + 1, y + 1});
+                            joOlemassaOlevaKirjain.push_back({x + 2, y + 2});
+                            joOlemassaOlevaKirjain.push_back({x + 3, y + 3});
+                            jaettuKirjain = true;
+                            break;
+                        }
+
+                        //}
+
+                        if (current == &pelaaja1 && uusiSOS) {
+                            cout << "\033[31m" << piste[y][x] << " \033[0m";
+                        }
+                        if (current == &pelaaja2 && uusiSOS) {
+                            cout << "\033[34m" << piste[y][x] << " \033[0m";
+                        }
+                        SOStulostettu = true;
+                    }
+                }
+
+                for (const auto& diagonaaliEtu : SOSjono4) {
+                    if ((diagonaaliEtu.first == x + 1 &&
+                         diagonaaliEtu.second == y + 1) &&
+                        (diagonaaliEtu.first == x + 1 &&
+                         diagonaaliEtu.second == y + 1) &&
+                        (diagonaaliEtu.first == x + 1 &&
+                         diagonaaliEtu.second == y + 1)) {
+                        //  for (const auto& diagonaaliPiste
+                        //  :joOlemassaOlevaKirjain) {
+
+                        //  if (diagonaaliPiste.first == diagonaaliEtu.first &&
+                        //  diagonaaliPiste.second == diagonaaliEtu.second) {
+
+                        if (SOSjono4.find({x + 1, y + 1}) != SOSjono4.end() &&
+                            SOSjono4.find({x, y + 1}) != SOSjono4.end() &&
+                            SOSjono4.find({x - 1, y + 1}) != SOSjono4.end()) {
+                            joOlemassaOlevaKirjain.push_back({x + 1, y + 1});
+                            joOlemassaOlevaKirjain.push_back({x + 1, y + 1});
+                            joOlemassaOlevaKirjain.push_back({x + 1, y + 1});
+                            jaettuKirjain = true;
+                            break;
+                        }
+
+                        //}
+                        SOStulostettu = true;
+                        if (current == &pelaaja1 && uusiSOS) {
+                            cout << "\033[31m" << piste[y][x] << " \033[0m";
+                        }
+                        if (current == &pelaaja2 && uusiSOS) {
+                            cout << "\033[34m" << piste[y][x] << " \033[0m";
+                        }
+                    }
+                }
+
+                // Tulostetaan kaikki paitsi SOS:it
+                if (!SOStulostettu && !jaettuKirjain) {
+                    cout << piste[y][x] << " ";
+                }
+            }
+            // Uusi rivi
+            cout << endl;
+        }
+
+        // Tulostetaan rivinumerot
+        cout << "0";
+        for (int x = 0; x < koko; ++x) {
+            cout << " " << x + 1;
+        }
+        cout << endl;
+    }
+
+   private:
+    int koko;
+    vector<vector<char>> piste;
+};
+
+// Tarkistetaan onko pelaaja saanut pisteen
+bool tarkistaPiste(Ruudukko& lauta, const char kirjain_S, const char kirjain_O,
+                   set<pair<int, int>>& SOSjono1, set<pair<int, int>>& SOSjono2,
+                   set<pair<int, int>>& SOSjono3,
+                   set<pair<int, int>>& SOSjono4) {
+    bool pisteLoytyi = false;
+
+    // Tarkistetaan rivit
+    for (int y = 0; y < lauta.getKoko(); ++y) {
+        for (int x = 0; x < lauta.getKoko() - 2; ++x) {
+            // Löytyykö jostain peräkkäin S, O ja S?
+            if (lauta.getPiste(y, x) == kirjain_S &&
+                lauta.getPiste(y, x + 1) == kirjain_O &&
+                lauta.getPiste(y, x + 2) == kirjain_S) {
+                bool onkoUusiSOS = true;
+                // Käydään läpi 3 saraketta ja tarkistetaan onko kyseessä vanha
+                // SOS. Jos on, ulos loopista LAITETTU I=1 KAIKKIIN
+                for (int i = 1; i < 3; ++i) {
+                    if (SOSjono1.find({y, x + i}) != SOSjono1.end()) {
+                        onkoUusiSOS = false;
+                        break;
+                    }
+                }
+                if (onkoUusiSOS) {
+                    cout << current->getNimi() << ":lle vaakasuora SOS!"
+                         << endl;
+                    pisteLoytyi = true;
+                    // Tallennetaan SOS:ien koordinaatit settiin
+                    SOSjono1.insert({x + 1, y + 1});  // S
+                    SOSjono1.insert({x + 2, y + 1});  // O
+                    SOSjono1.insert({x + 3, y + 1});  // S
+                }
+            }
+        }
+    }
+
+    // Tarkistetaan sarakkeet
+    for (int x = 0; x < lauta.getKoko(); ++x) {
+        for (int y = 0; y < lauta.getKoko() - 2; ++y) {
+            // Löytyykö jostain allekkain S, O ja S?
+            if (lauta.getPiste(y, x) == kirjain_S &&
+                lauta.getPiste(y + 1, x) == kirjain_O &&
+                lauta.getPiste(y + 2, x) == kirjain_S) {
+                bool onkoUusiSOS = true;
+                // Käydään läpi 3 riviä ja tarkistetaan onko kyseessä vanha SOS.
+                // Jos on, ulos loopista
+                for (int i = 1; i < 3; ++i) {
+                    if (SOSjono2.find({y + i, x}) != SOSjono2.end()) {
+                        onkoUusiSOS = false;
+                        break;
+                    }
+                }
+                if (onkoUusiSOS) {
+                    cout << current->getNimi() << ":lle pystysuora SOS!"
+                         << endl;
+                    pisteLoytyi = true;
+                    // Tallennetaan SOS:ien koordinaatit settiin
+                    SOSjono2.insert({x + 1, y + 1});  // S
+                    SOSjono2.insert({x + 1, y + 2});  // O
+                    SOSjono2.insert({x + 1, y + 3});  // S
+                }
+            }
+        }
+    }
+
+    // Tarkistetaan lävistäjä vasemmalta oikealle ylhäältä alas
+    for (int y = 0; y < lauta.getKoko() - 2; ++y) {
+        for (int x = 0; x < lauta.getKoko() - 2; ++x) {
+            // Löytyykö jostain diagonaalisesti S, O ja S?
+            if (lauta.getPiste(y, x) == kirjain_S &&
+                lauta.getPiste(y + 1, x + 1) == kirjain_O &&
+                lauta.getPiste(y + 2, x + 2) == kirjain_S) {
+                bool onkoUusiSOS = true;
+                // Käydään läpi ja tarkistetaan onko kyseessä vanha SOS. Jos on,
+                // ulos loopista
+                for (int i = 1; i < 3; ++i) {
+                    if (SOSjono3.find({y + i, x + i}) != SOSjono3.end()) {
+                        onkoUusiSOS = false;
+                        break;
+                    }
+                }
+                if (onkoUusiSOS) {
+                    cout << current->getNimi() << ":lle vinottainen SOS!"
+                         << endl;
+                    pisteLoytyi = true;
+                    // Tallennetaan SOS:ien koordinaatit settiin
+                    SOSjono3.insert({x + 1, y + 1});  // S
+                    SOSjono3.insert({x + 2, y + 2});  // O
+                    SOSjono3.insert({x + 3, y + 3});  // S
+                }
+            }
+        }
+    }
+
+    // Tarkistetaan lävistäjä oikealta vasemmalle ja ylhäältä alas
+    for (int y = 0; y < lauta.getKoko() - 2; ++y) {
+        for (int x = lauta.getKoko() - 1; x >= 2; --x) {
+            // Löytyykö jostain diagonaalisesti S, O ja S?
+            if (lauta.getPiste(y, x) == kirjain_S &&
+                lauta.getPiste(y + 1, x - 1) == kirjain_O &&
+                lauta.getPiste(y + 2, x - 2) == kirjain_S) {
+                bool onkoUusiSOS = true;
+                // Käydään läpi ja tarkistetaan onko kyseessä vanha SOS. Jos on,
+                // ulos loopista
+                for (int i = 1; i < 3; ++i) {
+                    if (SOSjono4.find({y + i, x - i}) != SOSjono4.end()) {
+                        onkoUusiSOS = false;
+                        break;
+                    }
+                }
+                if (onkoUusiSOS) {
+                    cout << current->getNimi() << ":lle vinottainen SOS!"
+                         << endl;
+                    pisteLoytyi = true;
+                    // Tallennetaan SOS:ien koordinaatit settiin
+
+                    SOSjono4.insert({x + 1, y + 1});  // S
+                    SOSjono4.insert({x, y + 2});      // O
+                    SOSjono4.insert({x - 1, y + 3});  // S
+                }
+            }
+        }
+    }
+    return pisteLoytyi;
+}
+
+int main() {
+    cout << "Anna ruudukon koko\n";
+    cin >> ruudukonKoko;
+
+    // Tehdään objekti ruudukosta
+    Ruudukko board(ruudukonKoko);
+    int pintaAla = ruudukonKoko * ruudukonKoko;
+    cout << "koko: " << pintaAla << endl;
+
+    set<pair<int, int>> SOSjono1;
+    set<pair<int, int>> SOSjono2;
+    set<pair<int, int>> SOSjono3;
+    set<pair<int, int>> SOSjono4;
+
+    // Pelilooppi
+    while (pintaAla > kirjainMaara) {
+        bool extraVuoro = false;
+        // Otetaan pelaajan kirjain ja piste
+        cout << current->getNimi() << ", Anna kirjain ja x ja y koordinaatit: ";
+        cin >> kirjain >> x >> y;
+        x--;
+        y--;
+
+        // Siirretään origo vasemmasta yläkulmasta vasempaan alakulmaan
+        /* y -= ruudukonKoko;
+        y *= -1;*/
+
+        kirjainMaara++;
+
+        // Tarkistetaan onko piste varattu tai ruudukon ulkopuolella
+        if (y < 0 || y >= board.getKoko() || x < 0 || x >= board.getKoko() ||
+            board.getPiste(y, x) != '+') {
+            cout << "Anna toinen piste" << endl;
+            continue;
+        }
+
+        // Laitetaan kirjain valittuun pisteeseen
+        if (kirjain == 'S') {
+            board.setPiste(y, x, current->getKirjain_S());
+        } else {
+            board.setPiste(y, x, current->getKirjain_O());
+        }
+
+        // käytetään ANSI värikoodeja joten laitetaan vt100 emulointi päälle
+        HANDLE handleOut = GetStdHandle(STD_OUTPUT_HANDLE);
+        DWORD consoleMode;
+        GetConsoleMode(handleOut, &consoleMode);
+        consoleMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+        SetConsoleMode(handleOut, consoleMode);
+
+        // Tuliko peräkkäisesti S, O ja S? Jos tuli, niin +1 piste
+        if (tarkistaPiste(board, current->getKirjain_S(),
+                          current->getKirjain_O(), SOSjono1, SOSjono2, SOSjono3,
+                          SOSjono4)) {
+            if (current == &pelaaja1) {
+                extraVuoro = false;
+                pelaaja1.lisaaPiste1();
+                cout << pelaaja1.getNimi() << ":llä on nyt "
+                     << pelaaja1.getPisteet1() << " piste(ttä)" << endl;
+            } else if (current == &pelaaja2) {
+                extraVuoro = false;
+                pelaaja2.lisaaPiste2();
+                cout << pelaaja2.getNimi() << ":llä on nyt "
+                     << pelaaja2.getPisteet2() << " piste(ttä)" << endl;
+            }
+        }
+
+        board.tulostaRuudukko(SOSjono1, SOSjono2, SOSjono3, SOSjono4);
+
+        for (const auto &koordinaatti : SOSjono1, SOSjono2, SOSjono3,
+             SOSjono4) {
+            cout << "SOS piste: ";
+            cout << "(" << koordinaatti.first << "," << koordinaatti.second
+                 << ")" << endl;
+        }
+
+        // Vaihdetaan pelaajaa, SOS:in saaja saa jatkaa vuoroaan
+        if (!extraVuoro) {
+            if (current == &pelaaja1) {
+                current = &pelaaja2;
+            } else {
+                current = &pelaaja1;
+            }
+        }
+    }
+
+    // Kumpi voitti?
+    if (pelaaja1.getPisteet1() > pelaaja2.getPisteet2()) {
+        cout << "Pelaaja 1 voitti!" << endl;
+        cout << "Pelaaja 1 sai kaikkiaan " << pelaaja1.getPisteet1()
+             << " pistettä ja pelaaja 2 sai " << pelaaja2.getPisteet2()
+             << " pistettä!" << endl;
+    } else if (pelaaja1.getPisteet1() < pelaaja2.getPisteet2()) {
+        cout << "Pelaaja 2 voitti!" << endl;
+        cout << "Pelaaja 1 sai kaikkiaan " << pelaaja1.getPisteet1()
+             << " pistettä ja pelaaja 2 sai " << pelaaja2.getPisteet2()
+             << " pistettä!" << endl;
+    }
+    // Tuliko tasapeli?
+    else {
+        cout << "Tasapeli!" << endl;
+        cout << "Molemmat saivat " << pelaaja1.getPisteet1() << " pistettä!"
+             << endl;
+    }
+
+    return 0;
+}
