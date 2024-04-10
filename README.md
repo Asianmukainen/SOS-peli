@@ -1,5 +1,5 @@
 -- SÄÄNNÖT --
-Pelin alussa käyttäjältä kysytään neliöruudukko, jonka koko on vähintään 3x3 ja mielellään alle 10x10 jotta ruudukko pysyy suorana.
+Pelin alussa käyttäjältä kysytään neliöruudukko, jonka koko on vähintään 3x3 ja mielellään alle 10x10 jotta ruudukko pysyy suorana. Ruudukon kooksi tulee kirjoittaa vain yhden sivun pituus eli vain yksi numero.
 Pelaajat lisäävät vuorotellen joko "S"- tai "O"-kirjaimen mihin tahansa vapaana olevaan pisteeseen, jotka on merkitty "+" symbolilla. Pelaaja voi siis käyttää molempia kirjaimia täysin vapaavalintaisesti. 
 Pelin tavoitteena on, että kumpikin pelaaja yrittää luoda peräkkäisen S-O-S yhdistelmän ruudukkoon joko vinottain, vaakasuunnassa tai pystysuunnassa, ja luoda niitä niin monta kuin pystyy. Vanhoja SOS:eja voidaan käyttää uusien luomiseen.
 Pelaajan 1 luomat SOS:it värittyvät automaattisesti punaiseksi, kun taas pelaajan 2 siniseksi. 
